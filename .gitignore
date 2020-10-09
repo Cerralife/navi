@@ -130,3 +130,6 @@ dmypy.json
 
 # Scratch folder
 scratch/
+
+# Data folder
+data/
