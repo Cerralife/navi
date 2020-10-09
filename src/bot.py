@@ -75,7 +75,7 @@ def react_to_link(payload):
         logging.debug("Link request channel != Hero channel")
 
     else:
-        thread  = Thread(target=navi.post_link, kwargs={"url":url})
+        thread  = Thread(target=navi.save_and_post_link, kwargs={"url":url})
         thread.start()
         return Response(status=200)
 

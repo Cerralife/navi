@@ -1,3 +1,5 @@
+from datetime import datetime
+import json
 import os
 import random
 
@@ -80,8 +82,10 @@ class Navi:
         self.slack_client.chat_postMessage(channel=self.current_hero_channel,
                                            text=message)
 
+    def save_and_post_link(self, url):
 
-    def post_link(self, url):
+        self.save_link_to_local(hero_rname=self.hero_rname, url=url)
+
         message = "\n".join([
             "Watch out!",
             "",
@@ -92,6 +96,27 @@ class Navi:
 
         self.slack_client.chat_postMessage(channel=self.group_channel_id,
                                            text=message)
+
+
+    def save_link_to_local(self, hero_rname, url,
+                           fpath='./data/navi_history.json'):
+        new_record = {
+            "timestamp": f"{datetime.now()}",
+            "hero": hero_rname,
+            "song link": url
+        }
+
+        try:
+            with open(fpath, "r") as fin:
+                dat = json.load(fin)
+        except:
+            dat = {"data":[]}
+
+        dat['data'].append(new_record)
+
+        with open(fpath, "w") as fout:
+            json.dump(dat, fout)
+
 
     def reset_navi(self):
         self.current_hero = None
