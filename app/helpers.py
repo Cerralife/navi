@@ -4,6 +4,12 @@ def get_user_real_name(slack_client, user_id):
     user_rname = user["real_name"]
     return user_rname
 
+def get_channel_name(slack_client, channel_id):
+    channel_info = slack_client.conversations_info(channel=channel_id)
+    channel = channel_info["channel"]
+    channel_name = channel["name"]
+    return channel_name
+
 def read_app_mention(payload):
     message = payload["event"]
 
