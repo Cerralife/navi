@@ -9,6 +9,7 @@ from threading import Thread
 from helpers import read_app_mention, read_link_shared
 from navi import Navi
 
+
 load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 
@@ -18,10 +19,11 @@ app = Flask(__name__)
 
 SLACK_SIGNING_SECRET = os.getenv('SLACK_SIGNING_SECRET')
 VERIFICATION_TOKEN = os.getenv('VERIFICATION_TOKEN')
-GREETINGS = ["hi", "hello", "hello there", "hey"]
+GREETINGS = ["hello", "hello there", "hey"]
+
 
 #instantiating Navi
-navi = Navi()
+NAVI = Navi()
 
 
 # An example of one of the Flask app's routes
@@ -48,21 +50,23 @@ slack_events_adapter = SlackEventAdapter(
 def reply_to_mention(payload):
     channel_id, user_id, command = read_app_mention(payload)
 
+    setattr(NAVI, 'group_channel_id', channel_id)
+    NAVI.set_group_name()
+
     if any(item in command.lower() for item in GREETINGS):
-        thread = Thread(target=navi.send_greeting,
-                        kwargs={'channel_id':channel_id, 'user_id':user_id})
+        thread = Thread(target=NAVI.send_greeting, kwargs={'user_id':user_id})
         thread.start()
         return Response(status=200)
 
     elif 'start' in command.lower():
-        thread = Thread(target=navi.start_navi,
-                        kwargs={"channel_id":channel_id})
+        thread = Thread(target=NAVI.start_navi)
         thread.start()
         return Response(status=200)
 
-    # elif 'history' in command.lower():
-        # list table of past posts and who was responsible
-        # will require storing responses somewhere
+    elif 'query' in command.lower():
+        thread = Thread(target=NAVI.query_navidb, kwargs={"command":command})
+        thread.start()
+        return Response(status=200)
 
 
 @slack_events_adapter.on("link_shared")
@@ -71,17 +75,17 @@ def react_to_link(payload):
     channel_id = event_data["channel"]
     url = read_link_shared(event_data)
 
-    if channel_id != navi.current_hero_channel:
+    if channel_id != NAVI.current_hero_channel:
         logging.debug("Link request channel != Hero channel")
 
     else:
-        thread  = Thread(target=navi.save_and_post_link, kwargs={"url":url})
+        thread  = Thread(target=NAVI.save_and_post_link, kwargs={"url":url})
         thread.start()
         return Response(status=200)
 
 
 # Start the server on port 3000
 if __name__ == "__main__":
-  app.run(port=3000)
+  app.run(port=4901)
 
 
